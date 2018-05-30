@@ -141,9 +141,8 @@ public class Scanner {
                         nextCh(); 
                         if(ch == '/'){
                             do nextCh();
-                            while(ch != '\n' || ch != eofCh);
+                            while(ch != '\n' && ch != eofCh);
                             token = next();
-                        
                         } else { token.kind = slash; } 
                         break;
                     // Brackets / Paraenthesis / Braces
@@ -153,6 +152,8 @@ public class Scanner {
                     case '}': nextCh(); token.kind = rbrace; break;
                     case '[': nextCh(); token.kind = lbrack; break;
                     case ']': nextCh(); token.kind = rbrack; break;
+                    // Backslash
+                    case '\"': readCharCon(token); break;
                     // Default
                     default: nextCh(); token.kind = none; break;
                 } // END OF switch 
@@ -167,7 +168,7 @@ public class Scanner {
             int index = Arrays.binarySearch(key, sb.toString());
             
             // If it isn't a keyword: kind == identifer
-            if(index == -1) token.kind = ident;
+            if(index < 0) token.kind = ident;
             // else if it is a keyword: kind == keyword
             else token.kind = keyVal[index];
             
@@ -189,11 +190,21 @@ public class Scanner {
         } // END OF readNumber
         
         private static void readCharCon(Token token){
-            // Build The String
+            // Build The StringnextCh()
+            nextCh();
             StringBuilder sb = new StringBuilder();
-            do{ sb.append(ch); nextCh();}
-            while(ch != '"');
-            if(sb.length() > 2 || sb.charAt(0) != '\\') System.out.println("Not Constant");
-            
+            while(ch != '"' && ch != eofCh && ch != eol){ sb.append(ch); nextCh(); };
+            if(ch == '\'') nextCh();
+            if(sb.length() == 1){
+                token.val = sb.charAt(0);
+            }
+            else if(sb.length() == 2 && sb.charAt(0) == '\\'){
+                if(sb.charAt(1) == 'n') token.val = '\n';
+                else if(sb.charAt(1) == 'r') token.val = '\r';
+                else if(sb.charAt(1) == 't') token.val = '\t';
+            } else {
+                System.out.println("Illegal Character Constants");
+            }
+            token.kind = charCon;
         } // END OF readCharCon
 }
